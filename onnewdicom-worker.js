@@ -112,33 +112,71 @@ const isSendAICriteria = function(seriesLength, instancesLength, moda, bpex, adp
   } return false;
 }
 
+const getAge = function(dateString) {
+	var dob = dateString;
+	var yy = dob.substr(0, 4);
+	var mo = dob.substr(4, 2);
+	var dd = dob.substr(6, 2);
+	var dobf = yy + '-' + mo + '-' + dd;
+	var today = new Date();
+	var birthDate = new Date(dobf);
+	var age = today.getFullYear() - birthDate.getFullYear();
+	var ageTime = today.getTime() - birthDate.getTime();
+	ageTime = new Date(ageTime);
+	if (age > 0) {
+		if ((ageTime.getMonth() > 0) || (ageTime.getDate() > 0)) {
+			age = (age + 1) + 'Y';
+		} else {
+			age = age + 'Y';
+		}
+	} else {
+		if (ageTime.getMonth() > 0) {
+			age = ageTime.getMonth() + 'M';
+		} else if (ageTime.getDate() > 0) {
+			age = ageTime.getDate() + 'D';
+		}
+	}
+	return age;
+}
+
 const doEventProcess = function(data){
   return new Promise(async(resolve, reject)=>{
-		let moda = data.dicom.SamplingSeries.MainDicomTags.Modality;
-		let bpex = data.dicom.SamplingSeries.MainDicomTags.BodyPartExamined;
-		let adpd = data.dicom.SamplingSeries.MainDicomTags.AcquisitionDeviceProcessingDescription;
-		let ppsd = data.dicom.SamplingSeries.MainDicomTags.PerformedProcedureStepDescription;
-		let seriesLength = data.dicom.Series.length;
-		let instancesLength = data.dicom.SamplingSeries.Instances.length;
-		let isCriteriaAI = isSendAICriteria(seriesLength, instancesLength, moda, bpex, adpd, ppsd);
-		log.info('isCriteriaAI=>' + isCriteriaAI);
-		log.info('isCriteriaAI == true =>' + (isCriteriaAI == true));
-    if (isCriteriaAI == true){
-      let studyId = data.dicom.ID;
-      let seriesId = data.dicom.SamplingSeries.ID;
-			let instanceList = data.dicom.SamplingSeries.Instances
-      let instanceId = instanceList[0];
-			let callImage = await doCallCreatePreviewSeries(seriesId, instanceList);
-      let callZipRes = await doCallCreateZipInstance(seriesId, instanceId);
-      let callSendAIRes = await doCallSendAI(seriesId, instanceId, studyId);
-			let aiResBody = JSON.parse(callSendAIRes.res.body);
-    	log.info('callSendAIRes=>' + JSON.stringify(aiResBody));
-			let pdffilecode = aiResBody.result.id;
-			let callConvertAIResultRes = await doConvertAIResult(studyId, pdffilecode, moda);
-      resolve(callConvertAIResultRes);
-    } else {
-      resolve();
-    }
+		let patientBirthDate = data.dicom.PatientBirthDate;
+		if ((patientBirthDate) && (patientBirthDate.length == 8)) {
+			let patientAge = getAge(patientBirthDate);
+			log.info('patientAge=>' + patientAge);
+			if (patientAge > 15) {
+				let moda = data.dicom.SamplingSeries.MainDicomTags.Modality;
+				let bpex = data.dicom.SamplingSeries.MainDicomTags.BodyPartExamined;
+				let adpd = data.dicom.SamplingSeries.MainDicomTags.AcquisitionDeviceProcessingDescription;
+				let ppsd = data.dicom.SamplingSeries.MainDicomTags.PerformedProcedureStepDescription;
+				let seriesLength = data.dicom.Series.length;
+				let instancesLength = data.dicom.SamplingSeries.Instances.length;
+				let isCriteriaAI = isSendAICriteria(seriesLength, instancesLength, moda, bpex, adpd, ppsd);
+				log.info('isCriteriaAI=>' + isCriteriaAI);
+				log.info('isCriteriaAI == true =>' + (isCriteriaAI == true));
+		    if (isCriteriaAI == true){
+		      let studyId = data.dicom.ID;
+		      let seriesId = data.dicom.SamplingSeries.ID;
+					let instanceList = data.dicom.SamplingSeries.Instances
+		      let instanceId = instanceList[0];
+					let callImage = await doCallCreatePreviewSeries(seriesId, instanceList);
+		      let callZipRes = await doCallCreateZipInstance(seriesId, instanceId);
+		      let callSendAIRes = await doCallSendAI(seriesId, instanceId, studyId);
+					let aiResBody = JSON.parse(callSendAIRes.res.body);
+		    	log.info('callSendAIRes=>' + JSON.stringify(aiResBody));
+					let pdffilecode = aiResBody.result.id;
+					let callConvertAIResultRes = await doConvertAIResult(studyId, pdffilecode, moda);
+		      resolve(callConvertAIResultRes);
+		    } else {
+		      resolve();
+		    }
+			} else {
+				resolve();
+			}
+		} else {
+			resolve();
+		}
   });
 }
 
