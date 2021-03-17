@@ -35,8 +35,9 @@ const http = require('http');
 // Port 4332 is currently unassigned and not widely used
 // We will use it as a default HTTP channel
 var port = normalizePort(process.env.SERVER_PORT || '3000');
-log.info('process.env.SERVER_PORT' + process.env.SERVER_PORT);
-log.info('process.env.SERVER_IP' + process.env.SERVER_IP);
+log.info('process.env.SERVER_PORT ' + process.env.SERVER_PORT);
+log.info('process.env.SERVER_IP ' + process.env.SERVER_IP);
+
 app.set('port', port);
 
 /**
@@ -45,7 +46,7 @@ app.set('port', port);
 
 //const httpsServer = https.createServer(credentials, app);
 //const api = require(__dirname + '/../app.js')(httpsServer, log);
-
+const config = process.env;
 const httpServer = http.createServer( app);
 const api = require(__dirname + '/../app.js')(httpServer, log);
 

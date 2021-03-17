@@ -10,6 +10,7 @@ var log, util, webSocketServer, clientSocket;
 
 const index = require(path.join(__dirname, 'routes', 'index'));
 const users = require(path.join(__dirname, 'routes', 'users'));
+const ris = require(path.join(__dirname, 'routes', 'ris'));
 
 const app = express();
 
@@ -27,23 +28,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
+app.use('/ris', ris);
 
 app.post('/proxy', (req, res) => {
 	let rqParams = req.body;
-	log.info('rqParams=>'+ JSON.stringify(rqParams));
 	util.proxyRequest(rqParams).then((proxyRes)=>{
 		log.info('proxyRes=>'+ JSON.stringify(proxyRes));
-		res.json({status:{code: 200}});
+		res.json(proxyRes);
 	})
 });
 
+/*
 const wsUsername = 'orthanc';
-const myHospitalId = 1;
+const myHospitalId = 2;
 const clientConnectUrl = 'wss://radconnext.info/' + wsUsername + '/' + myHospitalId + '?type=local';
+*/
 
 module.exports = (httpserver, monitor) => {
 	log = monitor;
 	webSocketServer = require('./websocket.js')(httpserver, monitor);
+	const clientConnectUrl = 'wss://radconnext.info/' + process.env.LOCAL_NAME + '/' + process.env.LOCAL_HOS_ID + '?type=local';
 	clientSocket = require('./websocket-client.js')(clientConnectUrl, monitor);
 	util = clientSocket = require('./lib/utility.js')( monitor);
 	let upload = require(path.join(__dirname, 'routes', 'uploader.js')) (app, webSocketServer, clientSocket);
