@@ -125,15 +125,19 @@ const getAge = function(dateString) {
 	ageTime = new Date(ageTime);
 	if (age > 0) {
 		if ((ageTime.getMonth() > 0) || (ageTime.getDate() > 0)) {
-			age = (age + 1) + 'Y';
+			//age = (age + 1) + 'Y';
+			age = (age + 1)
 		} else {
-			age = age + 'Y';
+			//age = age + 'Y';
+			age = age
 		}
 	} else {
 		if (ageTime.getMonth() > 0) {
-			age = ageTime.getMonth() + 'M';
+			//age = ageTime.getMonth() + 'M';
+			age = ageTime.getMonth()
 		} else if (ageTime.getDate() > 0) {
-			age = ageTime.getDate() + 'D';
+			//age = ageTime.getDate() + 'D';
+			age = ageTime.getDate()
 		}
 	}
 	return age;
@@ -141,7 +145,8 @@ const getAge = function(dateString) {
 
 const doEventProcess = function(data){
   return new Promise(async(resolve, reject)=>{
-		let patientBirthDate = data.dicom.PatientBirthDate;
+		let patientBirthDate = data.dicom.PatientMainDicomTags.PatientBirthDate;
+		log.info('patientBirthDate=>' + patientBirthDate);
 		if ((patientBirthDate) && (patientBirthDate.length == 8)) {
 			let patientAge = getAge(patientBirthDate);
 			log.info('patientAge=>' + patientAge);
