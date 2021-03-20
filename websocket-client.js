@@ -73,11 +73,19 @@ function RadconWebSocketClient (arg, log) {
 								log.error('NewDicomError=>' + JSON.stringify(error));
 						    reject(error);
 						  }
-							/*
-							require('./onnewdicom-worker.js')( eventData, (output)=>{
-								log.info('onNewDicomEvent Result=>' + JSON.stringify(output));
-							})
-							*/
+						break;
+						case "newreport":
+							let eventData = {ris: data.risParams};
+							const newreportEvtWorker = require('worker-farm');
+							const newreportEvtService = newreportEvtWorker(require.resolve('./onnewreport-worker.js'));
+							try {
+								newreportEvtService(eventData, function (output) {
+									log.info('onNewReportEvent Result=>' + JSON.stringify(output));
+								});
+							} catch (error){
+								log.error('NewReportError=>' + JSON.stringify(error));
+						    reject(error);
+						  }
 						break;
 						case "exec":
 

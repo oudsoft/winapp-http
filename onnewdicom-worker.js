@@ -10,51 +10,12 @@ const fs = require('fs');
 const url = require('url');
 const request = require('request-promise');
 
-const hospitalId = 2;
-const username = 'orthanc';
-const userId = 1;
-const radconApiUrl = 'https://radconnext.info';
+const util = require('./lib/utility.js')( log);
 
-const runcommand = function (command) {
-	return new Promise(function(resolve, reject) {
-		log.info("Exec Command=>" + command);
-		exec(command, (error, stdout, stderr) => {
-			if(error === null) {
-				resolve(`${stdout}`);
-			} else {
-				log.info('Error Exec => ' + error)
-				reject(`${stderr}`);
-			}
-		});
-	});
-}
-
-const proxyRequest = function(rqParam) {
-	return new Promise(function(resolve, reject) {
-		let rqBody = JSON.stringify(rqParam.body);
-		let proxyParams = {
-			method: rqParam.method,
-			url: rqParam.url,
-			auth: rqParam.auth,
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: rqBody
-		};
-		if (rqParam.Authorization) {
-			proxyParams.headers.Authorization = rqParam.Authorization;
-		}
-		log.info('proxyParams=>' + JSON.stringify(proxyParams));
-		request(proxyParams, (err, res, body) => {
-			if (!err) {
-				resolve({status: {code: 200}, res: res});
-			} else {
-				log.error('your Request Error=>' + JSON.stringify(err));
-				reject({status: {code: 500}, err: err});
-			}
-		});
-	});
-}
+const hospitalId = process.env.LOCAL_HOS_ID; /* 2 */
+const username = process.env.LOCAL_NAME; /*'orthanc'*/
+const radconApiUrl = process.env.RADCONNEXT_URL; /* 'https://radconnext.info'*/
+const userId = process.env.LOCAL_USER_ID; /* 1 */
 
 const doCallCreatePreviewSeries = function(seriesId, instanceList){
 	return new Promise(async function(resolve, reject) {
@@ -62,7 +23,7 @@ const doCallCreatePreviewSeries = function(seriesId, instanceList){
 		let apiurl = radconApiUrl + '/api/orthancproxy/create/preview';
 		//let orthancRes = await apiconnector.doCallApi(apiurl, params)
 		let rqParam = {method: 'post', url: apiurl, body: params};
-    let orthancRes = await proxyRequest(rqParam);
+    let orthancRes = await util.proxyRequest(rqParam);
 		resolve(orthancRes);
 	});
 }
@@ -73,7 +34,7 @@ const doCallCreateZipInstance = function(seriesId, instanceId){
     let apiurl = radconApiUrl + '/api/orthancproxy/create/zip/instance';
     //let orthancRes = await apiconnector.doCallApi(apiurl, params)
     let rqParam = {method: 'post', url: apiurl, body: params};
-    let orthancRes = await proxyRequest(rqParam);
+    let orthancRes = await util.proxyRequest(rqParam);
     resolve(orthancRes);
   });
 }
@@ -84,7 +45,7 @@ const doCallSendAI = function(seriesId, instanceId, studyId){
     let apiurl = radconApiUrl + '/api/orthancproxy/sendai';
     let rqParam = {method: 'post', url: apiurl, body: params};
     //let orthancRes = await apiconnector.doCallApi(apiurl, params)
-    let orthancRes = await proxyRequest(rqParam);
+    let orthancRes = await util.proxyRequest(rqParam);
     resolve(orthancRes);
   });
 }
@@ -95,7 +56,7 @@ const doConvertAIResult = function(studyId, pdffilecode, modality){
 		let apiurl = radconApiUrl + '/api/orthancproxy/convert/ai/report';
 		let rqParam = {method: 'post', url: apiurl, body: params};
 		//let orthancRes = await apiconnector.doCallApi(apiurl, params)
-		let orthancRes = await proxyRequest(rqParam);
+		let orthancRes = await util.proxyRequest(rqParam);
 		resolve(orthancRes);
 	});
 }
