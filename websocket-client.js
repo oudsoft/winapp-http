@@ -41,10 +41,10 @@ function RadconWebSocketClient (arg, log) {
 
 				if (data.type) {
 					switch (data.type) {
-						/*
-							การ uplad หน้า home/portal ตอนนี้ ใช้งานไปที่ route/uploader.js
-						*/
 						case "import":
+						/*
+						การ uplad หน้า home/portal ตอนนี้ ใช้งานไปที่ route/uploader.js
+						*/
 					    let importData = {download: {link: data.download.link}};
 							const workerFarm = require('worker-farm');
 							//const importService = workerFarm(require.resolve('./import-worker.js'));
@@ -53,6 +53,9 @@ function RadconWebSocketClient (arg, log) {
 								log.info('Import Result=>' + JSON.stringify(output));
 					    });
 						break;
+						/*
+							การ Convet อยู่ใน process เดียวกับ onNewReport
+						*/
 						case "trigger":
 							let convertData = data;
 							const convertWorker = require('worker-farm');
@@ -75,11 +78,11 @@ function RadconWebSocketClient (arg, log) {
 						  }
 						break;
 						case "newreport":
-							let eventData = {ris: data.risParams};
+							let reportData = data;
 							const newreportEvtWorker = require('worker-farm');
 							const newreportEvtService = newreportEvtWorker(require.resolve('./onnewreport-worker.js'));
 							try {
-								newreportEvtService(eventData, function (output) {
+								newreportEvtService(reportData, function (output) {
 									log.info('onNewReportEvent Result=>' + JSON.stringify(output));
 								});
 							} catch (error){
