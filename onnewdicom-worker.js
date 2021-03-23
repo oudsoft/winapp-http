@@ -130,18 +130,17 @@ const doEventProcess = function(data){
 		      let callZipRes = await doCallCreateZipInstance(seriesId, instanceId);
 		      let callSendAIRes = await doCallSendAI(seriesId, instanceId, studyId);
 					let aiResBody = JSON.parse(callSendAIRes.res.body);
-		    	log.info('callSendAIRes=>' + JSON.stringify(aiResBody));
 					let pdffilecode = aiResBody.result.id;
 					let callConvertAIResultRes = await doConvertAIResult(studyId, pdffilecode, moda);
 		      resolve(callConvertAIResultRes);
 		    } else {
-		      resolve();
+		      resolve({aiResult:{}, reason: 'dicom out off criteria.'});
 		    }
 			} else {
-				resolve();
+				resolve({aiResult:{}, reason: 'patient out off criteria.'});
 			}
 		} else {
-			resolve();
+			resolve({aiResult:{}, reason: 'patient birthday not present.'});
 		}
   });
 }
